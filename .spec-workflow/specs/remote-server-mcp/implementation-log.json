@@ -1,0 +1,343 @@
+{
+  "entries": [
+    {
+      "taskId": "6",
+      "timestamp": "2025-11-06T11:58:07.830Z",
+      "summary": "Added project documentation, gitignore, Vitest configuration, and unit tests covering configuration loading and command service streaming.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md",
+        "package-lock.json",
+        "package.json"
+      ],
+      "filesCreated": [
+        ".gitignore",
+        "README.md",
+        "tests/config-loader.test.ts",
+        "tests/command-service.test.ts",
+        "tsconfig.test.json",
+        "vitest.config.ts"
+      ],
+      "statistics": {
+        "linesAdded": 340,
+        "linesRemoved": 6,
+        "filesChanged": 9
+      },
+      "artifacts": {
+        "integrations": [
+          {
+            "description": "Vitest suite verifies config parsing failures and command service streaming behaviour to safeguard MCP interactions.",
+            "frontendComponent": "tests/config-loader.test.ts",
+            "backendEndpoint": "loadConfig / CommandService.runCommand",
+            "dataFlow": "Fixture config files → loadConfig validation → CommandService with stub transport → asserts hook/telemetry/stream output"
+          }
+        ]
+      },
+      "id": "979a0b12-25a1-4409-bdce-9e4ddc757248"
+    },
+    {
+      "taskId": "5",
+      "timestamp": "2025-11-06T11:52:21.959Z",
+      "summary": "Wired the MCP command service, tool definition, and server bootstrap to execute remote SSH commands with hooks and telemetry.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md",
+        "src/index.ts",
+        "package-lock.json",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "filesCreated": [
+        "src/services/command-service.ts",
+        "src/server.ts"
+      ],
+      "statistics": {
+        "linesAdded": 341,
+        "linesRemoved": 31,
+        "filesChanged": 7
+      },
+      "artifacts": {
+        "components": [
+          {
+            "name": "CommandService",
+            "type": "TypeScript",
+            "purpose": "Validates runCommand inputs, resolves host configs, invokes transports, streams output, and executes hooks/logging.",
+            "location": "src/services/command-service.ts",
+            "props": "runCommand(request: unknown): AsyncGenerator<RunCommandStreamResponse>",
+            "exports": [
+              "CommandService"
+            ]
+          },
+          {
+            "name": "McpServer bootstrap",
+            "type": "TypeScript",
+            "purpose": "Exports the runCommand tool via MCP, loads config, and manages lifecycle using the command service and SSH transport.",
+            "location": "src/server.ts",
+            "props": "bootstrap(): Promise<void>",
+            "exports": [
+              "bootstrap"
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "ChunkQueue",
+            "purpose": "Buffers stream chunks for async iteration when clients request streaming output.",
+            "location": "src/services/command-service.ts",
+            "signature": "push(value); close(); next(): Promise<IteratorResult<StreamChunkResponse>>",
+            "isExported": false
+          },
+          {
+            "name": "runCommand",
+            "purpose": "Async generator that emits stream chunks and final results while invoking hooks and telemetry.",
+            "location": "src/services/command-service.ts",
+            "signature": "(request: unknown) => AsyncGenerator<RunCommandStreamResponse>",
+            "isExported": true
+          },
+          {
+            "name": "bootstrap",
+            "purpose": "Initializes config, hooks, transport, command service, and MCP server with stdio transport.",
+            "location": "src/server.ts",
+            "signature": "() => Promise<void>",
+            "isExported": true
+          }
+        ],
+        "integrations": [
+          {
+            "description": "McpServer registers runCommand tool that uses CommandService; streaming chunks are relayed via MCP logging notifications.",
+            "frontendComponent": "McpServer tool",
+            "backendEndpoint": "CommandService.runCommand + SshTransport",
+            "dataFlow": "MCP client -> runCommand tool -> CommandService -> SshTransport -> telemetry/hooks -> MCP response"
+          }
+        ]
+      },
+      "id": "5f2f7340-4c7a-42ef-a8ae-ed89788bc592"
+    },
+    {
+      "taskId": "4",
+      "timestamp": "2025-11-06T11:41:53.280Z",
+      "summary": "Implemented execution hook management and telemetry logging for command lifecycle auditing.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md",
+        "package-lock.json",
+        "package.json",
+        "tsconfig.json"
+      ],
+      "filesCreated": [
+        "src/hooks/execution-hooks.ts",
+        "src/hooks/index.ts",
+        "src/logging/telemetry-logger.ts",
+        "src/logging/index.ts"
+      ],
+      "statistics": {
+        "linesAdded": 248,
+        "linesRemoved": 0,
+        "filesChanged": 8
+      },
+      "artifacts": {
+        "functions": [
+          {
+            "name": "ExecutionHookManager",
+            "purpose": "Coordinates before/after/error hooks for command executions with generated metadata.",
+            "location": "src/hooks/execution-hooks.ts",
+            "signature": "constructor(options?: HookManagerOptions); runBefore(context, metadata); runAfter(context, metadata, result); runError(context, metadata, error)",
+            "isExported": true
+          },
+          {
+            "name": "createExecutionMetadata",
+            "purpose": "Generates a unique invocation identifier and timestamp for hook correlation.",
+            "location": "src/hooks/execution-hooks.ts",
+            "signature": "() => ExecutionContextMetadata",
+            "isExported": true
+          },
+          {
+            "name": "TelemetryLogger.logCommandStart",
+            "purpose": "Writes structured start events for command executions.",
+            "location": "src/logging/telemetry-logger.ts",
+            "signature": "(context: CommandExecutionContext, invocationId: string) => void",
+            "isExported": false
+          },
+          {
+            "name": "TelemetryLogger.logCommandResult",
+            "purpose": "Emits completion telemetry with duration and result payloads.",
+            "location": "src/logging/telemetry-logger.ts",
+            "signature": "(context: CommandExecutionContext, invocationId: string, result: CommandExecutionResult, startedAt: Date) => void",
+            "isExported": false
+          },
+          {
+            "name": "TelemetryLogger.logCommandError",
+            "purpose": "Records structured error events when command execution fails.",
+            "location": "src/logging/telemetry-logger.ts",
+            "signature": "(context: CommandExecutionContext, invocationId: string, error: Error, startedAt: Date) => void",
+            "isExported": false
+          },
+          {
+            "name": "TelemetryStreamCollector",
+            "purpose": "Adapts streaming chunks from transports into telemetry log events.",
+            "location": "src/logging/telemetry-logger.ts",
+            "signature": "push(chunk: CommandStreamChunk): void",
+            "isExported": true
+          }
+        ],
+        "integrations": [
+          {
+            "description": "TelemetryStreamCollector consumes stream chunks from RemoteTransport implementations for logging, enabling future command services to attach telemetry without modifying transports.",
+            "frontendComponent": "TelemetryStreamCollector",
+            "backendEndpoint": "RemoteTransport.execute collector",
+            "dataFlow": "CommandService (future) -> TelemetryStreamCollector -> TelemetryLogger.logCommandChunk"
+          }
+        ]
+      },
+      "id": "5e1a10ac-82a2-4afe-9813-6241bc65d3e1"
+    },
+    {
+      "taskId": "3",
+      "timestamp": "2025-11-06T11:35:54.105Z",
+      "summary": "Added remote transport abstractions and SSH implementation with command execution, streaming, and host verification support.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md",
+        "package-lock.json",
+        "package.json",
+        "src/config/schema.ts",
+        "src/index.ts",
+        "tsconfig.json"
+      ],
+      "filesCreated": [
+        "src/transport/types.ts",
+        "src/transport/remote-transport.ts",
+        "src/transport/ssh-transport.ts"
+      ],
+      "statistics": {
+        "linesAdded": 482,
+        "linesRemoved": 20,
+        "filesChanged": 9
+      },
+      "artifacts": {
+        "components": [
+          {
+            "name": "SshTransport",
+            "type": "TypeScript",
+            "purpose": "Executes remote shell commands over SSH with timeout handling, streaming output, and optional host key verification.",
+            "location": "src/transport/ssh-transport.ts",
+            "props": "execute(context: CommandExecutionContext, collector?: StreamCollector): Promise<CommandExecutionResult>",
+            "exports": [
+              "SshTransport"
+            ]
+          }
+        ],
+        "functions": [
+          {
+            "name": "coerceConfig",
+            "purpose": "Validates and normalizes remote server config input; now accepts unknown values.",
+            "location": "src/config/schema.ts",
+            "signature": "(input: unknown) => RemoteServerConfig",
+            "isExported": true
+          },
+          {
+            "name": "loadConfig",
+            "purpose": "Loads and validates TOML configuration from disk.",
+            "location": "src/config/loader.ts",
+            "signature": "(options?: LoadConfigOptions) => Promise<RemoteServerConfig>",
+            "isExported": true
+          },
+          {
+            "name": "watchConfig",
+            "purpose": "Watches the config file and emits updated config snapshots.",
+            "location": "src/config/loader.ts",
+            "signature": "(handler: ConfigChangeHandler, options?: WatchConfigOptions) => ConfigWatcher",
+            "isExported": true
+          },
+          {
+            "name": "enrichError",
+            "purpose": "Wraps unknown errors with RemoteTransportError metadata.",
+            "location": "src/transport/remote-transport.ts",
+            "signature": "(error: unknown, code: RemoteTransportErrorCode, hostAlias: string) => RemoteTransportError",
+            "isExported": true
+          }
+        ],
+        "integrations": [
+          {
+            "description": "SshTransport consumes HostConfig entries to authenticate via keys, agents, or credential commands and enforces optional host key verification.",
+            "frontendComponent": "SshTransport",
+            "backendEndpoint": "SSH exec channel",
+            "dataFlow": "CommandService (future) -> SshTransport.execute() -> SSH server exec channel -> streaming collector -> aggregated result"
+          }
+        ]
+      },
+      "id": "d0271a39-bcdf-46c7-9c1d-a73826f2587a"
+    },
+    {
+      "taskId": "2",
+      "timestamp": "2025-11-06T11:22:40.187Z",
+      "summary": "Implemented configuration schemas and loader with validation, default path resolution, and file watch support.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md"
+      ],
+      "filesCreated": [
+        "src/config/types.ts",
+        "src/config/schema.ts",
+        "src/config/loader.ts"
+      ],
+      "statistics": {
+        "linesAdded": 318,
+        "linesRemoved": 0,
+        "filesChanged": 4
+      },
+      "artifacts": {
+        "functions": [
+          {
+            "name": "coerceConfig",
+            "purpose": "Validates and normalizes raw configuration data using Zod schemas.",
+            "location": "src/config/schema.ts",
+            "signature": "(input: RemoteServerConfigInput) => RemoteServerConfig",
+            "isExported": true
+          },
+          {
+            "name": "loadConfig",
+            "purpose": "Reads and validates the remote server configuration from disk with helpful errors.",
+            "location": "src/config/loader.ts",
+            "signature": "(options?: LoadConfigOptions) => Promise<RemoteServerConfig>",
+            "isExported": true
+          },
+          {
+            "name": "watchConfig",
+            "purpose": "Watches the configuration file for changes and emits reloaded configs.",
+            "location": "src/config/loader.ts",
+            "signature": "(handler: ConfigChangeHandler, options?: WatchConfigOptions) => ConfigWatcher",
+            "isExported": true
+          }
+        ]
+      },
+      "id": "d44c7f07-1ee4-4737-a47e-4193e27e9f27"
+    },
+    {
+      "taskId": "1",
+      "timestamp": "2025-11-06T11:20:02.212Z",
+      "summary": "Bootstrapped the TypeScript MCP project with build tooling and an initial server entrypoint.",
+      "filesModified": [
+        ".spec-workflow/specs/remote-server-mcp/tasks.md"
+      ],
+      "filesCreated": [
+        "package.json",
+        "tsconfig.json",
+        "src/index.ts"
+      ],
+      "statistics": {
+        "linesAdded": 73,
+        "linesRemoved": 0,
+        "filesChanged": 4
+      },
+      "artifacts": {
+        "functions": [
+          {
+            "name": "bootstrap",
+            "purpose": "Initializes the MCP server placeholder and keeps the process alive while other components are implemented.",
+            "location": "src/index.ts",
+            "signature": "() => Promise<void>",
+            "isExported": false
+          }
+        ]
+      },
+      "id": "be97eaaf-7ad5-47b6-8617-22083c544d4f"
+    }
+  ],
+  "lastUpdated": "2025-11-06T11:58:07.832Z"
+}

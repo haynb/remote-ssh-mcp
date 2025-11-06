@@ -1,0 +1,14 @@
+{
+  "filePath": ".spec-workflow/specs/remote-server-mcp/design.md",
+  "currentVersion": 1,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-11-06T11:15:08.728Z",
+      "trigger": "initial",
+      "approvalId": "approval_1762427708720_0ougbtaml",
+      "approvalTitle": "Design for remote-server-mcp"
+    }
+  ]
+}

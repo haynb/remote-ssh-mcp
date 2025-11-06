@@ -1,0 +1,14 @@
+{
+  "filePath": ".spec-workflow/specs/remote-server-mcp/requirements.md",
+  "currentVersion": 1,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-11-06T09:47:41.988Z",
+      "trigger": "initial",
+      "approvalId": "approval_1762422461982_5509zy7as",
+      "approvalTitle": "Requirements for remote-server-mcp"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "filePath": ".spec-workflow/specs/remote-server-mcp/tasks.md",
+  "currentVersion": 1,
+  "snapshots": [
+    {
+      "version": 1,
+      "filename": "snapshot-001.json",
+      "timestamp": "2025-11-06T11:17:33.181Z",
+      "trigger": "initial",
+      "approvalId": "approval_1762427853176_324byreyp",
+      "approvalTitle": "Tasks for remote-server-mcp"
+    }
+  ]
+}

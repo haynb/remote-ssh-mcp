@@ -66,12 +66,23 @@ Because the server speaks stdio, you can let your MCP client spawn it on demand 
 name = "remote-server-mcp"
 type = "stdio"
 command = "npx"
-args = ["remote-server-mcp@latest"]
-env = { REMOTE_SERVER_MCP_CONFIG = "/Users/me/.config/remote-server-mcp/config.toml" }
+args = ["-y", "remote-server-mcp@latest"]
+startup_timeout_sec = 45
+
+[servers.env]
+REMOTE_SERVER_MCP_CONFIG = "/Users/me/.config/remote-server-mcp/config.toml"
+REMOTE_SERVER_MCP_LOG_PATH = "/Users/me/.config/remote-server-mcp/server.log"
 ```
 
+- Always provide `REMOTE_SERVER_MCP_CONFIG`; without it the process exits immediately (clients see `Transport closed`). `REMOTE_SERVER_MCP_LOG_PATH` keeps telemetry out of stdout so stdio framing stays valid.
 - If you have not published the package yet, point `command` to `node` and pass the absolute path to `dist/index.js`, or use `command = "npx"`, `args = ["tsx", "src/index.ts"]` for live TypeScript execution.
 - Each time a client session starts, it will invoke the binary, stream stdout/stderr through the MCP logging channel, and exit when the command finishes—no background service is required.
+
+### Troubleshooting stdio launches
+
+- **Handshake fails instantly:** confirm the MCP client is passing both `REMOTE_SERVER_MCP_CONFIG` and (optionally) `REMOTE_SERVER_MCP_LOG_PATH`. Missing config paths manifest as `connection closed: initialize response` because the server aborts before emitting any MCP frames.
+- **First-time SSH prompts block execution:** set `strictHostKeyChecking = false` for the initial connection or pre-populate `known_hosts` with the remote fingerprint. Interactive "yes/no" prompts cannot be satisfied over stdio.
+- **Subsequent runs hang:** multiple background `remote-server-mcp` processes contend for stdio. Use `pgrep -fl remote-server-mcp` and terminate the stale `npm exec …` / `node …` PIDs so the MCP client can spawn a fresh copy cleanly.
 
 ## Testing
 

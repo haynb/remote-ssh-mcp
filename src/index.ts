@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { bootstrap } from './server.js';
 
 bootstrap().catch((error: unknown) => {

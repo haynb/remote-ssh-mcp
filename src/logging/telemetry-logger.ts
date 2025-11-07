@@ -48,7 +48,9 @@ export class TelemetryLogger {
 
   constructor(options: TelemetryLoggerOptions = {}) {
     const destination = options.destination ?? DEFAULT_LOG_PATH;
-    const pinoDestination = destination ? pino.destination(destination) : undefined;
+    const pinoDestination = destination
+      ? pino.destination(destination)
+      : pino.destination({ fd: process.stderr.fd });
 
     this.logger = pino(
       {

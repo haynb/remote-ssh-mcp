@@ -53,6 +53,26 @@ npm run dev
 
 The server currently uses the stdio MCP transport; integrate it with your MCP client by pointing at the process.
 
+## MCP client (stdio) setup
+
+Because the server speaks stdio, you can let your MCP client spawn it on demand instead of keeping a long-running daemon.
+
+1. Build once with `npm run build`.
+2. (Optional but convenient) run `npm link` so the `remote-server-mcp` CLI is available globally while developing.
+3. In your MCP client config, define a stdio server, for example:
+
+```toml
+[[servers]]
+name = "remote-server-mcp"
+type = "stdio"
+command = "npx"
+args = ["remote-server-mcp@latest"]
+env = { REMOTE_SERVER_MCP_CONFIG = "/Users/me/.config/remote-server-mcp/config.toml" }
+```
+
+- If you have not published the package yet, point `command` to `node` and pass the absolute path to `dist/index.js`, or use `command = "npx"`, `args = ["tsx", "src/index.ts"]` for live TypeScript execution.
+- Each time a client session starts, it will invoke the binary, stream stdout/stderr through the MCP logging channel, and exit when the command finishes—no background service is required.
+
 ## Testing
 
 ```bash
@@ -67,7 +87,7 @@ npm run lint
 
 ## Telemetry & Hooks
 
-Execution telemetry is emitted through Pino. Set `REMOTE_SERVER_MCP_LOG_PATH` to write logs to a file. Pre/post/error hook callbacks are in place for future policy enforcement.
+Execution telemetry is emitted through Pino. By default logs go to stderr (so stdio MCP transports keep stdout clean). Set `REMOTE_SERVER_MCP_LOG_PATH` to write logs to a file instead. Pre/post/error hook callbacks are in place for future policy enforcement.
 
 ## Safety Notes
 

@@ -1,6 +1,6 @@
 {
   "name": "remote-server-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Model Context Protocol server for executing commands on remote hosts via SSH.",
   "type": "module",
   "main": "dist/index.js",
